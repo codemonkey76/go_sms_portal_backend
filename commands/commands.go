@@ -16,6 +16,7 @@ type Command struct {
 }
 
 var commands = []Command{
+	{Name: "genkey", Help: "Generate a new key", Run: GenerateKeyCommand},
 	{Name: "seed", Help: "Seed the database with some data", Run: SeedCommand},
 	{Name: "route", Help: "List all the api routes", Run: RouteCommand},
 	{Name: "serve", Help: "Start the web server", Run: ServeCommand},
@@ -40,19 +41,20 @@ func RunCommand(name string, args []string) {
 }
 
 func Usage() {
-	ui.Colorize(ui.ColorGreen, os.Args[0])
+	ui.Output(ui.NewColor("green", "black"), os.Args[0])
+	ui.Output(ui.NewColor("green", "black"), os.Args[0])
 	fmt.Print(" version ")
-	ui.Colorize(ui.ColorYellow, config.ReleaseVersion)
+	ui.Output(ui.NewColor("yellow", "black"), config.ReleaseVersion)
 	fmt.Printf(" %s\n\n", config.ReleaseDate)
-	ui.Colorize(ui.ColorYellow, "Usage:\n")
+	ui.Output(ui.NewColor("yellow", "black"), "Usage:\n")
 	fmt.Print("    command [options] [arguments]\n\n")
-	ui.Colorize(ui.ColorYellow, "Options:\n")
-	ui.Colorize(ui.ColorGreen, "    -h, --help                    ")
+	ui.Output(ui.NewColor("yellow", "black"), "Options:\n")
+	ui.Output(ui.NewColor("green", "black"), "    -h, --help                    ")
 	fmt.Print("Display help for the given command. When no command is given display help for the list command\n")
 	fmt.Print("\n")
-	ui.Colorize(ui.ColorYellow, "Available Commands:\n")
-	ui.Colorize(ui.ColorGreen, "    seed    ")
+	ui.Output(ui.NewColor("yellow", "black"), "Available Commands:\n")
+	ui.Output(ui.NewColor("green", "black"), "    seed    ")
 	fmt.Print("Seed the database with some data\n")
-	ui.Colorize(ui.ColorGreen, "    serve   ")
+	ui.Output(ui.NewColor("green", "black"), "    serve   ")
 	fmt.Print("Start the server\n")
 }

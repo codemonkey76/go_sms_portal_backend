@@ -14,22 +14,27 @@ func RouteCommand(args []string) error {
 	api.RegisterRoutes("/api/v1", rr)
 
 	for _, r := range rr.Routes {
-		fmt.Printf("%s%s\n", colorizeMethod(r.Method), colorizeRoute(r.Prefix+r.Route))
+		fmt.Printf("%-8s%s\n", colorizeMethod(r.Method), colorizeRoute(r.Prefix+r.Route))
 	}
 
 	return nil
 }
 
 func colorizeMethod(method string) string {
-	color := ui.ColorReset
+
+	color := "white"
 	if method == "GET" {
-		color = ui.ColorBlue
+		color = "blue"
 	} else if method == "POST" || method == "PUT" || method == "PATCH" {
-		color = ui.ColorYellow
+		color = "yellow"
 	} else if method == "DELETE" {
-		color = ui.ColorRed
+		color = "red"
 	}
-	return fmt.Sprintf("%s%-8s%s", color, method, ui.ColorReset)
+	coloredMethod := ui.Output(ui.NewColor(color, "default"), method)
+	escapeCodesLength := len(coloredMethod) - len(method)
+	formattingWidth := 8 + escapeCodesLength
+
+	return fmt.Sprintf("%-*s", formattingWidth, coloredMethod)
 }
 
 func colorizeRoute(route string) string {
@@ -37,7 +42,7 @@ func colorizeRoute(route string) string {
 	var result string
 	for _, part := range parts {
 		if part.IsField {
-			result = result + fmt.Sprintf("%s%s%s", ui.ColorYellow, part.Part, ui.ColorReset)
+			result = result + ui.Output(ui.NewColor("yellow", "default"), part.Part)
 		} else {
 			result = result + part.Part
 		}

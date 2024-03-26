@@ -47,7 +47,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, email_verified_at, created_at, updated_at
+SELECT id, name, email, password, email_verified_at, created_at, updated_at
 FROM users
 WHERE email = $1
 LIMIT 1
@@ -57,6 +57,7 @@ type GetUserByEmailRow struct {
 	ID              int32        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
+	Password        string       `json:"password"`
 	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`
 	CreatedAt       time.Time    `json:"created_at"`
 	UpdatedAt       sql.NullTime `json:"updated_at"`
@@ -69,6 +70,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.ID,
 		&i.Name,
 		&i.Email,
+		&i.Password,
 		&i.EmailVerifiedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

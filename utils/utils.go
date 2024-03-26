@@ -82,10 +82,8 @@ func (rr *RouteRegistrar) AddHandler(method, prefix, route string, handlerFunc H
 		HandlerFunc: handlerFunc,
 	}
 	rr.Routes = append(rr.Routes, newRoute)
-	log.Println("Registering Route: ", fullPath)
 
 	rr.Mux.HandleFunc(fullPath, handler)
-
 }
 
 type StringPart struct {

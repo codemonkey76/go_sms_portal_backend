@@ -10,7 +10,7 @@ WHERE id = $1
 LIMIT 1;
 
 -- name: GetUserByEmail :one
-SELECT id, name, email, email_verified_at, created_at, updated_at
+SELECT id, name, email, password, email_verified_at, created_at, updated_at
 FROM users
 WHERE email = $1
 LIMIT 1;
