@@ -17,6 +17,7 @@ type Command struct {
 
 var commands = []Command{
 	{Name: "seed", Help: "Seed the database with some data", Run: SeedCommand},
+	{Name: "route", Help: "List all the api routes", Run: RouteCommand},
 	{Name: "serve", Help: "Start the web server", Run: ServeCommand},
 	{Name: "help", Help: "Print this help message", Run: HelpCommand},
 }

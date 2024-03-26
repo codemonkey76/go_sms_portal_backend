@@ -105,3 +105,58 @@ func (q *Queries) GetUserById(ctx context.Context, id int32) (GetUserByIdRow, er
 	)
 	return i, err
 }
+
+const listUsers = `-- name: ListUsers :many
+SELECT id, name, email, email_verified_at, created_at, updated_at
+FROM users
+WHERE ($1::varchar IS NULL OR name ILIKE $1)
+AND ($1 IS NULL OR email ILIKE $1)
+ORDER BY id ASC
+LIMIT $3::int
+OFFSET $2::int
+`
+
+type ListUsersParams struct {
+	Search sql.NullString `json:"search"`
+	Offset int32          `json:"offset"`
+	Limit  int32          `json:"limit"`
+}
+
+type ListUsersRow struct {
+	ID              int32        `json:"id"`
+	Name            string       `json:"name"`
+	Email           string       `json:"email"`
+	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`
+	CreatedAt       time.Time    `json:"created_at"`
+	UpdatedAt       sql.NullTime `json:"updated_at"`
+}
+
+func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUsers, arg.Search, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUsersRow{}
+	for rows.Next() {
+		var i ListUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.EmailVerifiedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

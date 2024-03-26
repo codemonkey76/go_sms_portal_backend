@@ -12,7 +12,7 @@ func ServeCommand(args []string) error {
 	routes.RegisterRoutes(mux)
 
 	log.Println(ui.Colorize(ui.ColorGreen, "Starting server on port 8080"))
-	http.ListenAndServe(":8080", mux)
-
+	err := http.ListenAndServe(":8080", mux)
+	log.Printf(ui.Colorize(ui.ColorRed, "Error occurred while starting server: "), err.Error())
 	return nil
 }
