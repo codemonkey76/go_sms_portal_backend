@@ -10,6 +10,6 @@ const (
 
 type Color string
 
-func Colorize(color Color, message string) {
-	fmt.Print(string(color), message, string(ColorReset))
+func Colorize(color Color, message string) string {
+	return fmt.Sprint(string(color), message, string(ColorReset))
 }
