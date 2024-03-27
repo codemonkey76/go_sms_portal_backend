@@ -17,11 +17,15 @@ func (e *HttpError) Error() string {
 func NewHttpError(code int, message string) *HttpError {
 	return &HttpError{code, message}
 }
-
+func Unauthorized() *HttpError {
+	return NewHttpError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+}
+func InvalidCredentials() *HttpError {
+	return NewHttpError(http.StatusUnauthorized, "Invalid credentials")
+}
 func NotFound() *HttpError {
 	return NewHttpError(http.StatusNotFound, http.StatusText(http.StatusNotFound))
 }
-
 func InternalServerError() *HttpError {
 	return NewHttpError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 }

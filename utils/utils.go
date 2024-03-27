@@ -3,10 +3,12 @@ package utils
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"regexp"
 	"sms_portal/db/sqlc"
+	httperrors "sms_portal/http"
 )
 
 type HandlerFunc func(http.ResponseWriter, *http.Request, HandlerDependencies) (interface{}, error)
@@ -16,7 +18,15 @@ func HandleRequest(deps HandlerDependencies, handler HandlerFunc) http.HandlerFu
 		log.Printf("Request: %-8s - %s", r.Method, r.URL.RequestURI())
 		data, err := handler(w, r, deps)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			var httpErr *httperrors.HttpError
+			if errors.As(err, &httpErr) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(httpErr.Code)
+				errorMessage := map[string]string{"error": httpErr.Message}
+				json.NewEncoder(w).Encode(errorMessage)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 

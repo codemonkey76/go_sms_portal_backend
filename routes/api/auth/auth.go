@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	httperrors "sms_portal/http"
 	"sms_portal/utils"
 	"time"
 
@@ -26,17 +27,16 @@ func Login(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
-		return nil, err
+		return nil, httperrors.InvalidCredentials()
 	}
 
 	user, err := deps.Queries.GetUserByEmail(r.Context(), creds.Email)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
 	if err != nil {
-		return nil, err
+		return nil, httperrors.InvalidCredentials()
 	}
 
 	expirationTime := time.Now().Add(24 * time.Hour)
@@ -49,7 +49,6 @@ func Login(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	fmt.Printf("%s", token.Raw)
 	return nil, nil
-
 }
 
 type Claims struct {

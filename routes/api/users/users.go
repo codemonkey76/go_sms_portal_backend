@@ -39,6 +39,7 @@ func Index(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 func Get(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
 	user, err := deps.Queries.GetUserById(r.Context(), 1)
 	if err != nil {
+		log.Println("Error: ", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, httperrors.NotFound()
 		}
