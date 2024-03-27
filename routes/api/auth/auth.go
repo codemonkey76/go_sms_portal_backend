@@ -2,9 +2,12 @@ package auth
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"sms_portal/db/sqlc"
+	"sms_portal/env"
 	httperrors "sms_portal/http"
+	"sms_portal/http/middleware"
+	"sms_portal/ui"
 	"sms_portal/utils"
 	"time"
 
@@ -18,8 +21,9 @@ type Credentials struct {
 }
 
 func RegisterRoutes(prefix string, rr *utils.RouteRegistrar) {
-	rr.AddHandler("POST", prefix, "/login", Login)
-	rr.AddHandler("POST", prefix, "/logout", Logout)
+	authStack := middleware.CreateStack(middleware.AuthHandler, middleware.LogRequestHandler)
+	rr.AddHandler("POST", prefix, "/login", Login, nil)
+	rr.AddHandler("POST", prefix, "/logout", Logout, authStack)
 }
 
 func Login(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
@@ -38,6 +42,7 @@ func Login(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 	if err != nil {
 		return nil, httperrors.InvalidCredentials()
 	}
+	ui.Info("User logged in: " + creds.Email)
 
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
@@ -47,8 +52,33 @@ func Login(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	fmt.Printf("%s", token.Raw)
-	return nil, nil
+	secret := env.Env(".env").Get("APP_KEY", "")
+	tokenString, err := token.SignedString([]byte(secret))
+	return_user := sqlc.GetUserByIdRow{
+		ID:              user.ID,
+		Name:            user.Name,
+		Email:           user.Email,
+		EmailVerifiedAt: user.EmailVerifiedAt,
+		CreatedAt:       user.CreatedAt,
+		UpdatedAt:       user.UpdatedAt,
+	}
+	response := LoginResponse{
+		Success:   true,
+		Message:   "Login successful.",
+		Data:      return_user,
+		Token:     tokenString,
+		ExpiresIn: expirationTime.Unix(),
+	}
+
+	return response, nil
+}
+
+type LoginResponse struct {
+	Success   bool        `json:"success"`
+	Message   string      `json:"message"`
+	Data      interface{} `json:"data"`
+	Token     string      `json:"token"`
+	ExpiresIn int64       `json:"expires_in"`
 }
 
 type Claims struct {

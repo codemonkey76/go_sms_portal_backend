@@ -12,13 +12,14 @@ import (
 	httperrors "sms_portal/http"
 	"sms_portal/pagination"
 	"sms_portal/utils"
+	"strconv"
 
 	"github.com/brianvoe/gofakeit/v6"
 )
 
 func RegisterRoutes(prefix string, rr *utils.RouteRegistrar) {
-	rr.AddHandler("GET", prefix, "/", Index)
-	rr.AddHandler("GET", prefix, "/{id}", Get)
+	rr.AddHandler("GET", prefix, "/", Index, nil)
+	rr.AddHandler("GET", prefix, "/{id}", Get, nil)
 }
 
 func Index(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
@@ -37,9 +38,15 @@ func Index(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 }
 
 func Get(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
-	user, err := deps.Queries.GetUserById(r.Context(), 1)
+	// Extract path variable
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		log.Println("Error: ", err)
+		return nil, httperrors.NotFound()
+	}
+
+	// Get User by ID
+	user, err := deps.Queries.GetUserById(r.Context(), int32(id))
+	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, httperrors.NotFound()
 		}

@@ -4,18 +4,17 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
-	"regexp"
 	"sms_portal/db/sqlc"
 	httperrors "sms_portal/http"
+	"sms_portal/http/middleware"
+	"sms_portal/ui"
 )
 
 type HandlerFunc func(http.ResponseWriter, *http.Request, HandlerDependencies) (interface{}, error)
 
 func HandleRequest(deps HandlerDependencies, handler HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Request: %-8s - %s", r.Method, r.URL.RequestURI())
 		data, err := handler(w, r, deps)
 		if err != nil {
 			var httpErr *httperrors.HttpError
@@ -24,6 +23,7 @@ func HandleRequest(deps HandlerDependencies, handler HandlerFunc) http.HandlerFu
 				w.WriteHeader(httpErr.Code)
 				errorMessage := map[string]string{"error": httpErr.Message}
 				json.NewEncoder(w).Encode(errorMessage)
+				ui.Error(httpErr.Message)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
@@ -58,6 +58,7 @@ type Route struct {
 	Prefix      string
 	Route       string
 	HandlerFunc HandlerFunc
+	Middleware  middleware.Middleware
 }
 
 type RouteRegistrarOption func(*RouteRegistrar)
@@ -81,47 +82,22 @@ func NewRouteRegistrar(mux *http.ServeMux, opts ...RouteRegistrarOption) *RouteR
 	return rr
 }
 
-func (rr *RouteRegistrar) AddHandler(method, prefix, route string, handlerFunc HandlerFunc) {
+func (rr *RouteRegistrar) AddHandler(method, prefix, route string, handlerFunc HandlerFunc, middleware middleware.Middleware) {
 	fullPath := method + " " + prefix + route
 	handler := HandleRequest(rr.Deps, handlerFunc)
 
+	if middleware != nil {
+		middlewareHandler := middleware(http.HandlerFunc(handler))
+		rr.Mux.Handle(fullPath, middlewareHandler)
+	} else {
+		rr.Mux.Handle(fullPath, http.HandlerFunc(handler))
+	}
 	newRoute := Route{
 		Method:      method,
 		Prefix:      prefix,
 		Route:       route,
 		HandlerFunc: handlerFunc,
+		Middleware:  middleware,
 	}
 	rr.Routes = append(rr.Routes, newRoute)
-
-	rr.Mux.HandleFunc(fullPath, handler)
-}
-
-type StringPart struct {
-	Part    string
-	IsField bool
-}
-
-func GetPartsByField(input string) []StringPart {
-	re := regexp.MustCompile(`{[^}]*}`)
-
-	matches := re.FindAllStringIndex(input, -1)
-	var parts []StringPart
-	lastIndex := 0
-	for _, match := range matches {
-		start, end := match[0], match[1]
-
-		if start > lastIndex {
-			parts = append(parts, StringPart{Part: input[lastIndex:start], IsField: false})
-		}
-
-		parts = append(parts, StringPart{Part: input[start:end], IsField: true})
-
-		lastIndex = end
-	}
-
-	if lastIndex < len(input) {
-		parts = append(parts, StringPart{Part: input[lastIndex:], IsField: false})
-	}
-
-	return parts
 }
