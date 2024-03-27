@@ -3,10 +3,13 @@ package auth
 import (
 	"encoding/json"
 	"net/http"
+	authtypes "sms_portal/auth"
 	"sms_portal/db/sqlc"
 	"sms_portal/env"
-	httperrors "sms_portal/http"
-	"sms_portal/http/middleware"
+	"sms_portal/http/errors"
+	mw "sms_portal/http/middleware"
+	mwauth "sms_portal/http/middleware/auth"
+	mwlog "sms_portal/http/middleware/log"
 	"sms_portal/ui"
 	"sms_portal/utils"
 	"time"
@@ -21,7 +24,7 @@ type Credentials struct {
 }
 
 func RegisterRoutes(prefix string, rr *utils.RouteRegistrar) {
-	authStack := middleware.CreateStack(middleware.AuthHandler, middleware.LogRequestHandler)
+	authStack := mw.CreateStack(mwauth.AuthHandler, mwlog.LogRequestHandler)
 	rr.AddHandler("POST", prefix, "/login", Login, nil)
 	rr.AddHandler("POST", prefix, "/logout", Logout, authStack)
 }
@@ -31,7 +34,7 @@ func Login(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
-		return nil, httperrors.InvalidCredentials()
+		return nil, errors.InvalidCredentials()
 	}
 
 	user, err := deps.Queries.GetUserByEmail(r.Context(), creds.Email)
@@ -40,12 +43,12 @@ func Login(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 	}
 
 	if err != nil {
-		return nil, httperrors.InvalidCredentials()
+		return nil, errors.InvalidCredentials()
 	}
 	ui.Info("User logged in: " + creds.Email)
 
 	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &Claims{
+	claims := &authtypes.Claims{
 		Email: creds.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
@@ -79,11 +82,6 @@ type LoginResponse struct {
 	Data      interface{} `json:"data"`
 	Token     string      `json:"token"`
 	ExpiresIn int64       `json:"expires_in"`
-}
-
-type Claims struct {
-	Email string `json:"email"`
-	jwt.StandardClaims
 }
 
 func Logout(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {

@@ -9,7 +9,8 @@ import (
 	"sms_portal/auth"
 	"sms_portal/database"
 	"sms_portal/db/sqlc"
-	httperrors "sms_portal/http"
+	httperrors "sms_portal/http/errors"
+	mwauth "sms_portal/http/middleware/auth"
 	"sms_portal/pagination"
 	"sms_portal/utils"
 	"strconv"
@@ -23,6 +24,12 @@ func RegisterRoutes(prefix string, rr *utils.RouteRegistrar) {
 }
 
 func Index(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
+	// Authorize user
+	user := sqlc.User(r.Context().Value("userFunc").(mwauth.UserFunc)())
+	if !auth.HasPermission(user, "users.list") {
+		return nil, httperrors.Forbidden()
+	}
+
 	page, perPage, search := pagination.GetPaginationOptions(r)
 
 	users, err := deps.Queries.ListUsers(r.Context(), sqlc.ListUsersParams{

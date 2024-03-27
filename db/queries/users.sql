@@ -23,3 +23,13 @@ AND (sqlc.narg('search') IS NULL OR email ILIKE sqlc.narg('search'))
 ORDER BY id ASC
 LIMIT sqlc.arg('limit')::int
 OFFSET sqlc.arg('offset')::int;
+
+-- name: ListUserPermissions :many
+SELECT DISTINCT p.name
+FROM users u
+JOIN role_user ru on u.id = ru.user_id
+JOIN permission_role pr on ru.role_id = pr.role_id
+JOIN permissions p on pr.permission_id = p.id
+WHERE u.id = $1;
+
+

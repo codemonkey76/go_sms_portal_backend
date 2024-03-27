@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"sms_portal/db/sqlc"
-	httperrors "sms_portal/http"
+	httperrors "sms_portal/http/errors"
 	"sms_portal/http/middleware"
 	"sms_portal/ui"
 )

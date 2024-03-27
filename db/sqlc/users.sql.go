@@ -108,6 +108,38 @@ func (q *Queries) GetUserById(ctx context.Context, id int32) (GetUserByIdRow, er
 	return i, err
 }
 
+const listUserPermissions = `-- name: ListUserPermissions :many
+SELECT DISTINCT p.name
+FROM users u
+JOIN role_user ru on u.id = ru.user_id
+JOIN permission_role pr on ru.role_id = pr.role_id
+JOIN permissions p on pr.permission_id = p.id
+WHERE u.id = $1
+`
+
+func (q *Queries) ListUserPermissions(ctx context.Context, id int32) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listUserPermissions, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, name, email, email_verified_at, created_at, updated_at
 FROM users

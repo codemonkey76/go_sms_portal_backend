@@ -1,9 +1,6 @@
-package httperrors
+package errors
 
-import (
-	"errors"
-	"net/http"
-)
+import "net/http"
 
 type HttpError struct {
 	Code    int
@@ -20,6 +17,9 @@ func NewHttpError(code int, message string) *HttpError {
 func Unauthorized() *HttpError {
 	return NewHttpError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 }
+func Forbidden() *HttpError {
+	return NewHttpError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
+}
 func InvalidCredentials() *HttpError {
 	return NewHttpError(http.StatusUnauthorized, "Invalid credentials")
 }
@@ -29,5 +29,3 @@ func NotFound() *HttpError {
 func InternalServerError() *HttpError {
 	return NewHttpError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 }
-
-var ErrNotFound = errors.New
