@@ -1,0 +1,16 @@
+[Unit]
+Description="SMS Portal Backend Server"
+After=postgresql.service
+
+[Service]
+type=simple
+User={{USERNAME}}
+Group={{GROUP_NAME}}
+WorkingDirectory={{WORKING_DIRECTORY}}
+ExecStart={{EXECUTABLE_PATH}} serve
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,3 +1,4 @@
 .env
 .env.test
 sms_portal
+bin/

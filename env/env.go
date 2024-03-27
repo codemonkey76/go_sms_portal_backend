@@ -57,3 +57,8 @@ func (e Env) Set(key, value string) error {
 
 	return nil
 }
+
+func (e Env) Get(key, defaultValue string) string {
+	godotenv.Load()
+	return getVarOrDefault(key, defaultValue)
+}

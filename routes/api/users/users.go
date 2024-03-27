@@ -2,11 +2,14 @@ package users
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"sms_portal/auth"
 	"sms_portal/database"
 	"sms_portal/db/sqlc"
+	httperrors "sms_portal/http"
 	"sms_portal/pagination"
 	"sms_portal/utils"
 
@@ -36,7 +39,10 @@ func Index(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencie
 func Get(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
 	user, err := deps.Queries.GetUserById(r.Context(), 1)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, httperrors.NotFound()
+		}
+		return nil, httperrors.InternalServerError()
 	}
 	return user, nil
 }
