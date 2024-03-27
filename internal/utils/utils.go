@@ -6,9 +6,9 @@ import (
 	"errors"
 	"net/http"
 	"sms_portal/db/sqlc"
-	httperrors "sms_portal/http/errors"
-	"sms_portal/http/middleware"
-	"sms_portal/ui"
+	http_errors "sms_portal/internal/errors"
+	"sms_portal/internal/middleware"
+	"sms_portal/internal/ui"
 )
 
 type HandlerFunc func(http.ResponseWriter, *http.Request, HandlerDependencies) (interface{}, error)
@@ -17,7 +17,7 @@ func HandleRequest(deps HandlerDependencies, handler HandlerFunc) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := handler(w, r, deps)
 		if err != nil {
-			var httpErr *httperrors.HttpError
+			var httpErr *http_errors.HttpError
 			if errors.As(err, &httpErr) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(httpErr.Code)

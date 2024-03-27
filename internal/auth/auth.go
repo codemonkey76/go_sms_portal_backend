@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
-	"sms_portal/database"
 	"sms_portal/db/sqlc"
+	"sms_portal/internal/database"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"

@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 	"sms_portal/commands"
-	"sms_portal/database"
+	"sms_portal/internal/database"
 )
 
 func main() {

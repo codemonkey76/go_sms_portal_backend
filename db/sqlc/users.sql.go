@@ -14,7 +14,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (name, email, password)
 VALUES ($1, $2, $3)
-RETURNING id, name, email, email_verified_at, created_at, updated_at
+RETURNING id, name, email, active, email_verified_at, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -27,6 +27,7 @@ type CreateUserRow struct {
 	ID              int32        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
+	Active          bool         `json:"active"`
 	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`
 	CreatedAt       time.Time    `json:"created_at"`
 	UpdatedAt       sql.NullTime `json:"updated_at"`
@@ -39,6 +40,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 		&i.ID,
 		&i.Name,
 		&i.Email,
+		&i.Active,
 		&i.EmailVerifiedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -47,7 +49,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, password, email_verified_at, created_at, updated_at
+SELECT id, name, email, password, active, email_verified_at, created_at, updated_at
 FROM users
 WHERE email = $1
 LIMIT 1
@@ -58,6 +60,7 @@ type GetUserByEmailRow struct {
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
 	Password        string       `json:"password"`
+	Active          bool         `json:"active"`
 	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`
 	CreatedAt       time.Time    `json:"created_at"`
 	UpdatedAt       sql.NullTime `json:"updated_at"`
@@ -71,6 +74,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.Active,
 		&i.EmailVerifiedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -79,7 +83,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, name, email, email_verified_at, created_at, updated_at
+SELECT id, name, email, active, email_verified_at, created_at, updated_at
 FROM users
 WHERE id = $1
 LIMIT 1
@@ -89,6 +93,7 @@ type GetUserByIdRow struct {
 	ID              int32        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
+	Active          bool         `json:"active"`
 	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`
 	CreatedAt       time.Time    `json:"created_at"`
 	UpdatedAt       sql.NullTime `json:"updated_at"`
@@ -101,6 +106,7 @@ func (q *Queries) GetUserById(ctx context.Context, id int32) (GetUserByIdRow, er
 		&i.ID,
 		&i.Name,
 		&i.Email,
+		&i.Active,
 		&i.EmailVerifiedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -141,7 +147,7 @@ func (q *Queries) ListUserPermissions(ctx context.Context, id int32) ([]string, 
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, name, email, email_verified_at, created_at, updated_at
+SELECT id, name, email, active, email_verified_at, created_at, updated_at
 FROM users
 WHERE ($1::varchar IS NULL OR name ILIKE $1)
 AND ($1 IS NULL OR email ILIKE $1)
@@ -160,6 +166,7 @@ type ListUsersRow struct {
 	ID              int32        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
+	Active          bool         `json:"active"`
 	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`
 	CreatedAt       time.Time    `json:"created_at"`
 	UpdatedAt       sql.NullTime `json:"updated_at"`
@@ -178,6 +185,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 			&i.ID,
 			&i.Name,
 			&i.Email,
+			&i.Active,
 			&i.EmailVerifiedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,

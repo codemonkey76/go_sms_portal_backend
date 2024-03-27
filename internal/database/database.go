@@ -2,7 +2,8 @@ package database
 
 import (
 	"database/sql"
-	"sms_portal/core"
+	_ "github.com/lib/pq"
+	"sms_portal/internal/env"
 	"sync"
 )
 
@@ -13,7 +14,7 @@ var (
 
 func InitDB() {
 	var err error
-	db, err = core.ConnectDB()
+	db, err = ConnectDB()
 
 	if err != nil {
 		panic(err)
@@ -32,4 +33,8 @@ func CloseDB() {
 	if db != nil {
 		db.Close()
 	}
+}
+
+func ConnectDB() (*sql.DB, error) {
+	return sql.Open("postgres", env.GetConnectionString())
 }
