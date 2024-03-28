@@ -59,8 +59,8 @@ func AuthLogin(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepende
 		Name:     "session_token",
 		Value:    tokenString,
 		Expires:  time.Now().Add(config.SessionExpiration * time.Minute),
-		Secure:   true,
-		HttpOnly: true,
+		Secure:   false,
+		HttpOnly: false,
 	})
 
 	return_user := sqlc.CreateUserRow{
