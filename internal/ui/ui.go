@@ -27,6 +27,7 @@ func Error(v ...any) {
 func Output(c *Color, message string) string {
 	return c.Apply(message)
 }
+
 func ColorizeUri(method, route string) string {
 	return ColorizeMethod(method) + " " + ColorizeRoute(route)
 }

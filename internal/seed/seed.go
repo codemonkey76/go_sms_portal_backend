@@ -2,10 +2,11 @@ package seed
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"sms_portal/db/sqlc"
 	"sms_portal/internal/auth"
 	"sms_portal/internal/database"
+	"sms_portal/internal/ui"
 
 	"github.com/brianvoe/gofakeit"
 )
@@ -17,7 +18,7 @@ func SeedUsers() {
 	queries := sqlc.New(db)
 	ctx := context.Background()
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 5; i++ {
 		name := gofakeit.Name()
 		email := gofakeit.Email()
 		password := string(auth.HashPassword("password"))
@@ -29,9 +30,13 @@ func SeedUsers() {
 		})
 
 		if err != nil {
-			log.Printf("Could not add user: %s", err)
+			ui.Error(fmt.Sprintf("Could not add user: %s", err))
 		} else {
-			log.Printf("Added user: %s - %s", u.Email, password)
+			ui.Info(fmt.Sprintf("Added user: %s - %s", u.Email, password))
 		}
 	}
+}
+
+func SeedAll() {
+	SeedUsers()
 }
