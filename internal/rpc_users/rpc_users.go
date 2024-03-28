@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"sms_portal/db/sqlc"
+	"sms_portal/internal/auth"
 	http_errors "sms_portal/internal/errors"
 	"sms_portal/internal/pagination"
 	"sms_portal/internal/utils"
@@ -13,10 +14,11 @@ import (
 
 func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
 	// Authorize user
-	// user := sqlc.User(r.Context().Value("userFunc").(middleware.UserFunc)())
-	// if !auth.HasPermission(user, "users.list") {
-	// 	return nil, http_errors.Forbidden()
-	// }
+	user_id := r.Context().Value("user_id").(int64)
+
+	if !auth.HasPermission(user_id, "users.list") {
+		return nil, http_errors.Forbidden()
+	}
 
 	page, perPage, search := pagination.GetPaginationOptions(r)
 

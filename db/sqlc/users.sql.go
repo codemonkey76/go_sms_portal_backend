@@ -120,10 +120,10 @@ FROM users u
 JOIN role_user ru on u.id = ru.user_id
 JOIN permission_role pr on ru.role_id = pr.role_id
 JOIN permissions p on pr.permission_id = p.id
-WHERE u.id = $1
+WHERE u.id = $1::int64
 `
 
-func (q *Queries) ListUserPermissions(ctx context.Context, id int32) ([]string, error) {
+func (q *Queries) ListUserPermissions(ctx context.Context, id interface{}) ([]string, error) {
 	rows, err := q.query(ctx, q.listUserPermissionsStmt, listUserPermissions, id)
 	if err != nil {
 		return nil, err

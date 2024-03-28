@@ -30,6 +30,6 @@ FROM users u
 JOIN role_user ru on u.id = ru.user_id
 JOIN permission_role pr on ru.role_id = pr.role_id
 JOIN permissions p on pr.permission_id = p.id
-WHERE u.id = $1;
+WHERE u.id = sqlc.arg('id')::int64;
 
 

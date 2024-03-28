@@ -16,7 +16,7 @@ type Querier interface {
 	GetSessionByToken(ctx context.Context, id string) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int32) (GetUserByIdRow, error)
-	ListUserPermissions(ctx context.Context, id int32) ([]string, error)
+	ListUserPermissions(ctx context.Context, id interface{}) ([]string, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error)
 }
 

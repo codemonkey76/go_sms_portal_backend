@@ -58,7 +58,10 @@ func ColorizeRoute(route string) string {
 			result = result + part.Part
 		}
 	}
-	return result
+	escapeCodesLength := len(result) - len(route)
+	formattingWidth := 50 + escapeCodesLength
+
+	return fmt.Sprintf("%-*s", formattingWidth, result)
 }
 
 type StringPart struct {

@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sms_portal/db/sqlc"
 	"sms_portal/internal/config"
@@ -29,10 +30,13 @@ func LogRequestHandler(next http.Handler) http.Handler {
 
 		wrapped := &wrappedWriter{ResponseWriter: w, statusCode: http.StatusOK}
 		next.ServeHTTP(wrapped, r)
+		uri := ui.ColorizeUri(r.Method, r.URL.Path)
+
+		s := fmt.Sprintf("%d %s %s", wrapped.statusCode, uri, time.Since(start).String())
 		if wrapped.statusCode == http.StatusOK {
-			ui.Info(wrapped.statusCode, ui.ColorizeUri(r.Method, r.URL.Path), time.Since(start).String())
+			ui.Info(s)
 		} else {
-			ui.Error(wrapped.statusCode, ui.ColorizeUri(r.Method, r.URL.Path), time.Since(start).String())
+			ui.Error(s)
 		}
 	})
 }

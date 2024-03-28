@@ -18,12 +18,12 @@ func HashPassword(plaintextPassword string) []byte {
 	return hashedPassword
 }
 
-func HasPermission(user sqlc.User, permission string) bool {
+func HasPermission(id int64, permission string) bool {
 	db := database.GetDB()
 	queries := sqlc.New(db)
 
 	// Check if user has directly assigned permission
-	permissions, err := queries.ListUserPermissions(context.Background(), user.ID)
+	permissions, err := queries.ListUserPermissions(context.Background(), id)
 	if err != nil {
 		return false
 	}
