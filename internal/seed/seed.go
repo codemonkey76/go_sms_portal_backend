@@ -7,6 +7,8 @@ import (
 	"sms_portal/internal/auth"
 	"sms_portal/internal/database"
 	"sms_portal/internal/ui"
+
+	"github.com/brianvoe/gofakeit"
 )
 
 func SeedPermissions() {
@@ -36,6 +38,10 @@ func SeedUsers() {
 
 	addUser(&ctx, queries, "Admin User", "admin@example.com", "password")
 	addUser(&ctx, queries, "Regular User", "user@example.com", "password")
+
+	for i := 0; i < 100; i++ {
+		addUser(&ctx, queries, gofakeit.Name(), gofakeit.Email(), gofakeit.Password(true, true, true, false, false, 12))
+	}
 }
 
 func addUser(ctx *context.Context, queries *sqlc.Queries, name, email, password string) {

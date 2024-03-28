@@ -83,11 +83,9 @@ func AuthLogin(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepende
 }
 
 type LoginResponse struct {
-	Success   bool        `json:"success"`
-	Message   string      `json:"message"`
-	Data      interface{} `json:"data"`
-	Token     string      `json:"token"`
-	ExpiresIn int64       `json:"expires_in"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
 func AuthLogout(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {

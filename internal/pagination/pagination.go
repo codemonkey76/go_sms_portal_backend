@@ -2,6 +2,7 @@ package pagination
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -28,7 +29,62 @@ type PaginationLink struct {
 	Active bool   `json:"active"`
 }
 
-func GetPaginationOptions(r *http.Request) (int, int, sql.NullString) {
+func NewPaginator(options ...PaginatorOption) *Paginator {
+	p := &Paginator{}
+
+	for _, option := range options {
+		option(p)
+	}
+
+	return p
+}
+
+type PaginatorOption func(*Paginator)
+
+func WithData(data interface{}) PaginatorOption {
+	return func(p *Paginator) {
+		p.Data = data
+	}
+}
+
+func WithPerPage(perPage int) PaginatorOption {
+	return func(p *Paginator) {
+		p.PerPage = perPage
+	}
+}
+
+func WithPage(page int) PaginatorOption {
+	return func(p *Paginator) {
+		p.CurrentPage = page
+	}
+}
+
+func WithFrom(from int) PaginatorOption {
+	fmt.Printf("Setting From to: %d\n", from)
+	return func(p *Paginator) {
+		p.From = from
+	}
+}
+
+func WithTo(to int) PaginatorOption {
+	return func(p *Paginator) {
+		p.To = to
+	}
+}
+
+func WithTotal(total int) PaginatorOption {
+	return func(p *Paginator) {
+		p.Total = total
+	}
+}
+
+func WithLastPage(lastPage int) PaginatorOption {
+	return func(p *Paginator) {
+		p.LastPage = lastPage
+	}
+}
+
+func GetPaginationFieldsFromRequest(r *http.Request) (int, int, sql.NullString) {
 	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 	if err != nil {
 		page = 1

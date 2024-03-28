@@ -16,13 +16,23 @@ WHERE email = $1
 LIMIT 1;
 
 -- name: ListUsers :many
+WITH filtered_users AS (
 SELECT id, name, email, active, email_verified_at, created_at, updated_at
 FROM users
 WHERE (sqlc.narg('search')::varchar IS NULL OR name ILIKE sqlc.narg('search'))
 AND (sqlc.narg('search') IS NULL OR email ILIKE sqlc.narg('search'))
-ORDER BY id ASC
+    ),
+count_cte AS (
+SELECT COUNT(*) as total_count
+    FROM filtered_users
+)
+SELECT f.*, c.total_count
+    FROM filtered_users f
+    CROSS JOIN count_cte c
+ORDER BY f.id ASC
 LIMIT sqlc.arg('limit')::int
 OFFSET sqlc.arg('offset')::int;
+
 
 -- name: ListUserPermissions :many
 SELECT DISTINCT p.name

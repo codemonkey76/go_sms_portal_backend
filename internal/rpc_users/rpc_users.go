@@ -20,7 +20,7 @@ func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepend
 		return nil, http_errors.Forbidden()
 	}
 
-	page, perPage, search := pagination.GetPaginationOptions(r)
+	page, perPage, search := pagination.GetPaginationFieldsFromRequest(r)
 
 	users, err := deps.Queries.ListUsers(r.Context(), sqlc.ListUsersParams{
 		Search: search,
@@ -31,7 +31,17 @@ func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepend
 		return nil, err
 	}
 
-	return users, nil
+	paginator := pagination.NewPaginator(
+		pagination.WithData(users),
+		pagination.WithPerPage(perPage),
+		pagination.WithPage(page),
+		pagination.WithFrom((page-1)*perPage+1),
+		pagination.WithTo(len(users)+(page-1)*perPage),
+		pagination.WithTotal(int(users[0].TotalCount)),
+		pagination.WithLastPage(int(users[0].TotalCount)/perPage),
+	)
+
+	return paginator, nil
 }
 
 func UsersGet(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {

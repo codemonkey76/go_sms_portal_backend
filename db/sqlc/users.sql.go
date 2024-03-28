@@ -191,19 +191,28 @@ func (q *Queries) ListUserPermissions(ctx context.Context, userID int64) ([]stri
 }
 
 const listUsers = `-- name: ListUsers :many
+WITH filtered_users AS (
 SELECT id, name, email, active, email_verified_at, created_at, updated_at
 FROM users
-WHERE ($1::varchar IS NULL OR name ILIKE $1)
-AND ($1 IS NULL OR email ILIKE $1)
-ORDER BY id ASC
-LIMIT $3::int
-OFFSET $2::int
+WHERE ($3::varchar IS NULL OR name ILIKE $3)
+AND ($3 IS NULL OR email ILIKE $3)
+    ),
+count_cte AS (
+SELECT COUNT(*) as total_count
+    FROM filtered_users
+)
+SELECT f.id, f.name, f.email, f.active, f.email_verified_at, f.created_at, f.updated_at, c.total_count
+    FROM filtered_users f
+    CROSS JOIN count_cte c
+ORDER BY f.id ASC
+LIMIT $2::int
+OFFSET $1::int
 `
 
 type ListUsersParams struct {
-	Search sql.NullString `json:"search"`
 	Offset int32          `json:"offset"`
 	Limit  int32          `json:"limit"`
+	Search sql.NullString `json:"search"`
 }
 
 type ListUsersRow struct {
@@ -214,10 +223,11 @@ type ListUsersRow struct {
 	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`
 	CreatedAt       time.Time    `json:"created_at"`
 	UpdatedAt       sql.NullTime `json:"updated_at"`
+	TotalCount      int64        `json:"total_count"`
 }
 
 func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error) {
-	rows, err := q.query(ctx, q.listUsersStmt, listUsers, arg.Search, arg.Offset, arg.Limit)
+	rows, err := q.query(ctx, q.listUsersStmt, listUsers, arg.Offset, arg.Limit, arg.Search)
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +243,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 			&i.EmailVerifiedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
