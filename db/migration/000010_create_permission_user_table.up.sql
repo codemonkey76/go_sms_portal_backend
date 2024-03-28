@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "permission_user" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
 
   -- Foreign keys
   "permission_id" bigint NOT NULL,

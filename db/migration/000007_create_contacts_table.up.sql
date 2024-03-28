@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "contacts" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "phone" varchar NOT NULL,
   "first_name" varchar,
   "last_name" varchar,

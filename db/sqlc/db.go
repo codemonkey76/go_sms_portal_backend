@@ -24,6 +24,21 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.attachPermissionToRoleStmt, err = db.PrepareContext(ctx, attachPermissionToRole); err != nil {
+		return nil, fmt.Errorf("error preparing query AttachPermissionToRole: %w", err)
+	}
+	if q.attachPermissionToUserStmt, err = db.PrepareContext(ctx, attachPermissionToUser); err != nil {
+		return nil, fmt.Errorf("error preparing query AttachPermissionToUser: %w", err)
+	}
+	if q.attachRoleToUserStmt, err = db.PrepareContext(ctx, attachRoleToUser); err != nil {
+		return nil, fmt.Errorf("error preparing query AttachRoleToUser: %w", err)
+	}
+	if q.createPermissionStmt, err = db.PrepareContext(ctx, createPermission); err != nil {
+		return nil, fmt.Errorf("error preparing query CreatePermission: %w", err)
+	}
+	if q.createRoleStmt, err = db.PrepareContext(ctx, createRole); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateRole: %w", err)
+	}
 	if q.createSessionStmt, err = db.PrepareContext(ctx, createSession); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSession: %w", err)
 	}
@@ -35,6 +50,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteSessionByUserIdStmt, err = db.PrepareContext(ctx, deleteSessionByUserId); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSessionByUserId: %w", err)
+	}
+	if q.getPermissionByNameStmt, err = db.PrepareContext(ctx, getPermissionByName); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPermissionByName: %w", err)
 	}
 	if q.getSessionByTokenStmt, err = db.PrepareContext(ctx, getSessionByToken); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSessionByToken: %w", err)
@@ -56,6 +74,31 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.attachPermissionToRoleStmt != nil {
+		if cerr := q.attachPermissionToRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing attachPermissionToRoleStmt: %w", cerr)
+		}
+	}
+	if q.attachPermissionToUserStmt != nil {
+		if cerr := q.attachPermissionToUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing attachPermissionToUserStmt: %w", cerr)
+		}
+	}
+	if q.attachRoleToUserStmt != nil {
+		if cerr := q.attachRoleToUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing attachRoleToUserStmt: %w", cerr)
+		}
+	}
+	if q.createPermissionStmt != nil {
+		if cerr := q.createPermissionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createPermissionStmt: %w", cerr)
+		}
+	}
+	if q.createRoleStmt != nil {
+		if cerr := q.createRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createRoleStmt: %w", cerr)
+		}
+	}
 	if q.createSessionStmt != nil {
 		if cerr := q.createSessionStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createSessionStmt: %w", cerr)
@@ -74,6 +117,11 @@ func (q *Queries) Close() error {
 	if q.deleteSessionByUserIdStmt != nil {
 		if cerr := q.deleteSessionByUserIdStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSessionByUserIdStmt: %w", cerr)
+		}
+	}
+	if q.getPermissionByNameStmt != nil {
+		if cerr := q.getPermissionByNameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPermissionByNameStmt: %w", cerr)
 		}
 	}
 	if q.getSessionByTokenStmt != nil {
@@ -138,31 +186,43 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                        DBTX
-	tx                        *sql.Tx
-	createSessionStmt         *sql.Stmt
-	createUserStmt            *sql.Stmt
-	deleteExpiredSessionsStmt *sql.Stmt
-	deleteSessionByUserIdStmt *sql.Stmt
-	getSessionByTokenStmt     *sql.Stmt
-	getUserByEmailStmt        *sql.Stmt
-	getUserByIdStmt           *sql.Stmt
-	listUserPermissionsStmt   *sql.Stmt
-	listUsersStmt             *sql.Stmt
+	db                         DBTX
+	tx                         *sql.Tx
+	attachPermissionToRoleStmt *sql.Stmt
+	attachPermissionToUserStmt *sql.Stmt
+	attachRoleToUserStmt       *sql.Stmt
+	createPermissionStmt       *sql.Stmt
+	createRoleStmt             *sql.Stmt
+	createSessionStmt          *sql.Stmt
+	createUserStmt             *sql.Stmt
+	deleteExpiredSessionsStmt  *sql.Stmt
+	deleteSessionByUserIdStmt  *sql.Stmt
+	getPermissionByNameStmt    *sql.Stmt
+	getSessionByTokenStmt      *sql.Stmt
+	getUserByEmailStmt         *sql.Stmt
+	getUserByIdStmt            *sql.Stmt
+	listUserPermissionsStmt    *sql.Stmt
+	listUsersStmt              *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                        tx,
-		tx:                        tx,
-		createSessionStmt:         q.createSessionStmt,
-		createUserStmt:            q.createUserStmt,
-		deleteExpiredSessionsStmt: q.deleteExpiredSessionsStmt,
-		deleteSessionByUserIdStmt: q.deleteSessionByUserIdStmt,
-		getSessionByTokenStmt:     q.getSessionByTokenStmt,
-		getUserByEmailStmt:        q.getUserByEmailStmt,
-		getUserByIdStmt:           q.getUserByIdStmt,
-		listUserPermissionsStmt:   q.listUserPermissionsStmt,
-		listUsersStmt:             q.listUsersStmt,
+		db:                         tx,
+		tx:                         tx,
+		attachPermissionToRoleStmt: q.attachPermissionToRoleStmt,
+		attachPermissionToUserStmt: q.attachPermissionToUserStmt,
+		attachRoleToUserStmt:       q.attachRoleToUserStmt,
+		createPermissionStmt:       q.createPermissionStmt,
+		createRoleStmt:             q.createRoleStmt,
+		createSessionStmt:          q.createSessionStmt,
+		createUserStmt:             q.createUserStmt,
+		deleteExpiredSessionsStmt:  q.deleteExpiredSessionsStmt,
+		deleteSessionByUserIdStmt:  q.deleteSessionByUserIdStmt,
+		getPermissionByNameStmt:    q.getPermissionByNameStmt,
+		getSessionByTokenStmt:      q.getSessionByTokenStmt,
+		getUserByEmailStmt:         q.getUserByEmailStmt,
+		getUserByIdStmt:            q.getUserByIdStmt,
+		listUserPermissionsStmt:    q.listUserPermissionsStmt,
+		listUsersStmt:              q.listUsersStmt,
 	}
 }

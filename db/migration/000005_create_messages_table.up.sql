@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "messages" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "body" varchar(1000) NOT NULL,
   "segments" int NOT NULL DEFAULT 1,
   "from" varchar(255),

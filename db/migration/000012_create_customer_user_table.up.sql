@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "customer_user" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
 
   -- Foreign keys
   "customer_id" bigint NOT NULL,

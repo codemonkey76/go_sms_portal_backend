@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "customers" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar UNIQUE NOT NULL,
   "sender_id" varchar NOT NULL,
   "active" boolean NOT NULL DEFAULT false,

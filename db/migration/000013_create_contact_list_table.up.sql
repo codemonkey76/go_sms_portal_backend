@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "contact_list" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
 
   -- Foreign keys
   "contact_id" bigint NOT NULL,

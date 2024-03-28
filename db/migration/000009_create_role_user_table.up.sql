@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "role_user" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
 
   -- Foreign keys
   "role_id" bigint NOT NULL,

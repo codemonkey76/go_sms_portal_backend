@@ -11,6 +11,50 @@ import (
 	"time"
 )
 
+const attachPermissionToUser = `-- name: AttachPermissionToUser :one
+INSERT INTO permission_user (permission_id, user_id) VALUES ($1, $2) RETURNING id, permission_id, user_id, created_at, updated_at
+`
+
+type AttachPermissionToUserParams struct {
+	PermissionID int64 `json:"permission_id"`
+	UserID       int64 `json:"user_id"`
+}
+
+func (q *Queries) AttachPermissionToUser(ctx context.Context, arg AttachPermissionToUserParams) (PermissionUser, error) {
+	row := q.queryRow(ctx, q.attachPermissionToUserStmt, attachPermissionToUser, arg.PermissionID, arg.UserID)
+	var i PermissionUser
+	err := row.Scan(
+		&i.ID,
+		&i.PermissionID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const attachRoleToUser = `-- name: AttachRoleToUser :one
+INSERT INTO role_user (role_id, user_id) VALUES ($1, $2) RETURNING id, role_id, user_id, created_at, updated_at
+`
+
+type AttachRoleToUserParams struct {
+	RoleID int64 `json:"role_id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) AttachRoleToUser(ctx context.Context, arg AttachRoleToUserParams) (RoleUser, error) {
+	row := q.queryRow(ctx, q.attachRoleToUserStmt, attachRoleToUser, arg.RoleID, arg.UserID)
+	var i RoleUser
+	err := row.Scan(
+		&i.ID,
+		&i.RoleID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (name, email, password)
 VALUES ($1, $2, $3)
@@ -24,7 +68,7 @@ type CreateUserParams struct {
 }
 
 type CreateUserRow struct {
-	ID              int32        `json:"id"`
+	ID              int64        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
 	Active          bool         `json:"active"`
@@ -56,7 +100,7 @@ LIMIT 1
 `
 
 type GetUserByEmailRow struct {
-	ID              int32        `json:"id"`
+	ID              int64        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
 	Password        string       `json:"password"`
@@ -90,7 +134,7 @@ LIMIT 1
 `
 
 type GetUserByIdRow struct {
-	ID              int32        `json:"id"`
+	ID              int64        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
 	Active          bool         `json:"active"`
@@ -99,7 +143,7 @@ type GetUserByIdRow struct {
 	UpdatedAt       sql.NullTime `json:"updated_at"`
 }
 
-func (q *Queries) GetUserById(ctx context.Context, id int32) (GetUserByIdRow, error) {
+func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error) {
 	row := q.queryRow(ctx, q.getUserByIdStmt, getUserById, id)
 	var i GetUserByIdRow
 	err := row.Scan(
@@ -116,15 +160,15 @@ func (q *Queries) GetUserById(ctx context.Context, id int32) (GetUserByIdRow, er
 
 const listUserPermissions = `-- name: ListUserPermissions :many
 SELECT DISTINCT p.name
-FROM users u
-JOIN role_user ru on u.id = ru.user_id
-JOIN permission_role pr on ru.role_id = pr.role_id
-JOIN permissions p on pr.permission_id = p.id
-WHERE u.id = $1::int64
+FROM permissions p
+LEFT JOIN permission_user pu ON p.id = pu.permission_id AND pu.user_id = $1
+LEFT JOIN permission_role pr ON p.id = pr.permission_id
+LEFT JOIN role_user ru ON pr.role_id = ru.role_id AND ru.user_id = $1
+WHERE pu.user_id = $1 OR ru.user_id = $1
 `
 
-func (q *Queries) ListUserPermissions(ctx context.Context, id interface{}) ([]string, error) {
-	rows, err := q.query(ctx, q.listUserPermissionsStmt, listUserPermissions, id)
+func (q *Queries) ListUserPermissions(ctx context.Context, userID int64) ([]string, error) {
+	rows, err := q.query(ctx, q.listUserPermissionsStmt, listUserPermissions, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +207,7 @@ type ListUsersParams struct {
 }
 
 type ListUsersRow struct {
-	ID              int32        `json:"id"`
+	ID              int64        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
 	Active          bool         `json:"active"`

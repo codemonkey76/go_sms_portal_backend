@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "lists" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar UNIQUE NOT NULL,
 
   -- Foreign keys

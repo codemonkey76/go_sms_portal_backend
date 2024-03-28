@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "roles" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar UNIQUE NOT NULL,
 
   -- Timestamps

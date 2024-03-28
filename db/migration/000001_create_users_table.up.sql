@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "users" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "email_verified_at" timestamp,

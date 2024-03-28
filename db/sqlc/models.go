@@ -10,7 +10,7 @@ import (
 )
 
 type Contact struct {
-	ID         int32          `json:"id"`
+	ID         int64          `json:"id"`
 	Phone      string         `json:"phone"`
 	FirstName  sql.NullString `json:"first_name"`
 	LastName   sql.NullString `json:"last_name"`
@@ -21,7 +21,7 @@ type Contact struct {
 }
 
 type ContactList struct {
-	ID        int32        `json:"id"`
+	ID        int64        `json:"id"`
 	ContactID int64        `json:"contact_id"`
 	ListID    int64        `json:"list_id"`
 	CreatedAt time.Time    `json:"created_at"`
@@ -29,7 +29,7 @@ type ContactList struct {
 }
 
 type Customer struct {
-	ID        int32        `json:"id"`
+	ID        int64        `json:"id"`
 	Name      string       `json:"name"`
 	SenderID  string       `json:"sender_id"`
 	Active    bool         `json:"active"`
@@ -38,7 +38,7 @@ type Customer struct {
 }
 
 type CustomerUser struct {
-	ID         int32        `json:"id"`
+	ID         int64        `json:"id"`
 	CustomerID int64        `json:"customer_id"`
 	UserID     int64        `json:"user_id"`
 	CreatedAt  time.Time    `json:"created_at"`
@@ -46,7 +46,7 @@ type CustomerUser struct {
 }
 
 type List struct {
-	ID         int32        `json:"id"`
+	ID         int64        `json:"id"`
 	Name       string       `json:"name"`
 	CustomerID int64        `json:"customer_id"`
 	CreatedAt  time.Time    `json:"created_at"`
@@ -54,7 +54,7 @@ type List struct {
 }
 
 type Message struct {
-	ID         int32          `json:"id"`
+	ID         int64          `json:"id"`
 	Body       string         `json:"body"`
 	Segments   int32          `json:"segments"`
 	From       sql.NullString `json:"from"`
@@ -70,14 +70,14 @@ type Message struct {
 }
 
 type Permission struct {
-	ID        int32        `json:"id"`
+	ID        int64        `json:"id"`
 	Name      string       `json:"name"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 type PermissionRole struct {
-	ID           int32        `json:"id"`
+	ID           int64        `json:"id"`
 	PermissionID int64        `json:"permission_id"`
 	RoleID       int64        `json:"role_id"`
 	CreatedAt    time.Time    `json:"created_at"`
@@ -85,7 +85,7 @@ type PermissionRole struct {
 }
 
 type PermissionUser struct {
-	ID           int32        `json:"id"`
+	ID           int64        `json:"id"`
 	PermissionID int64        `json:"permission_id"`
 	UserID       int64        `json:"user_id"`
 	CreatedAt    time.Time    `json:"created_at"`
@@ -93,14 +93,14 @@ type PermissionUser struct {
 }
 
 type Role struct {
-	ID        int32        `json:"id"`
+	ID        int64        `json:"id"`
 	Name      string       `json:"name"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 type RoleUser struct {
-	ID        int32        `json:"id"`
+	ID        int64        `json:"id"`
 	RoleID    int64        `json:"role_id"`
 	UserID    int64        `json:"user_id"`
 	CreatedAt time.Time    `json:"created_at"`
@@ -119,7 +119,7 @@ type Session struct {
 }
 
 type Template struct {
-	ID         int32        `json:"id"`
+	ID         int64        `json:"id"`
 	Name       string       `json:"name"`
 	Content    string       `json:"content"`
 	CustomerID int64        `json:"customer_id"`
@@ -128,7 +128,7 @@ type Template struct {
 }
 
 type User struct {
-	ID              int32        `json:"id"`
+	ID              int64        `json:"id"`
 	Name            string       `json:"name"`
 	Email           string       `json:"email"`
 	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`

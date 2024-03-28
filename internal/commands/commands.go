@@ -99,6 +99,8 @@ func SeedCommand() {
 			seed.SeedAll()
 		case "users":
 			seed.SeedUsers()
+		case "permissions":
+			seed.SeedPermissions()
 		default:
 			ui.Warn("Invalid entity: ", entity)
 		}

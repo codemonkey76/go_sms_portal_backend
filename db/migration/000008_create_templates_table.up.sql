@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "templates" (
-  "id" serial PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar UNIQUE NOT NULL,
   "content" varchar(1000) NOT NULL,
   

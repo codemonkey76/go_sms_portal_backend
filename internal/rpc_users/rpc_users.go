@@ -42,7 +42,7 @@ func UsersGet(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependen
 	}
 
 	// Get User by ID
-	user, err := deps.Queries.GetUserById(r.Context(), int32(id))
+	user, err := deps.Queries.GetUserById(r.Context(), int64(id))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, http_errors.NotFound()

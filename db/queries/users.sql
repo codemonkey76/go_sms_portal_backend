@@ -26,10 +26,14 @@ OFFSET sqlc.arg('offset')::int;
 
 -- name: ListUserPermissions :many
 SELECT DISTINCT p.name
-FROM users u
-JOIN role_user ru on u.id = ru.user_id
-JOIN permission_role pr on ru.role_id = pr.role_id
-JOIN permissions p on pr.permission_id = p.id
-WHERE u.id = sqlc.arg('id')::int64;
+FROM permissions p
+LEFT JOIN permission_user pu ON p.id = pu.permission_id AND pu.user_id = $1
+LEFT JOIN permission_role pr ON p.id = pr.permission_id
+LEFT JOIN role_user ru ON pr.role_id = ru.role_id AND ru.user_id = $1
+WHERE pu.user_id = $1 OR ru.user_id = $1;
 
+-- name: AttachPermissionToUser :one
+INSERT INTO permission_user (permission_id, user_id) VALUES ($1, $2) RETURNING *;
 
+-- name: AttachRoleToUser :one
+INSERT INTO role_user (role_id, user_id) VALUES ($1, $2) RETURNING *;

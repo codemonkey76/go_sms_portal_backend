@@ -9,14 +9,20 @@ import (
 )
 
 type Querier interface {
+	AttachPermissionToRole(ctx context.Context, arg AttachPermissionToRoleParams) (PermissionRole, error)
+	AttachPermissionToUser(ctx context.Context, arg AttachPermissionToUserParams) (PermissionUser, error)
+	AttachRoleToUser(ctx context.Context, arg AttachRoleToUserParams) (RoleUser, error)
+	CreatePermission(ctx context.Context, name string) (Permission, error)
+	CreateRole(ctx context.Context, name string) (Role, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteExpiredSessions(ctx context.Context, lastActivity int64) error
 	DeleteSessionByUserId(ctx context.Context, userID int64) error
+	GetPermissionByName(ctx context.Context, name string) (Permission, error)
 	GetSessionByToken(ctx context.Context, id string) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
-	GetUserById(ctx context.Context, id int32) (GetUserByIdRow, error)
-	ListUserPermissions(ctx context.Context, id interface{}) ([]string, error)
+	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
+	ListUserPermissions(ctx context.Context, userID int64) ([]string, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error)
 }
 
