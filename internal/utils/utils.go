@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -100,4 +102,15 @@ func (rr *RouteRegistrar) AddHandler(method, prefix, route string, handlerFunc H
 		Middleware:  middleware,
 	}
 	rr.Routes = append(rr.Routes, newRoute)
+}
+
+// Generate a secure session token
+func GenerateSessionToken() (string, error) {
+	tokenBytes := make([]byte, 32)
+	_, err := rand.Read(tokenBytes)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(tokenBytes), nil
 }

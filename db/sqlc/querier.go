@@ -9,7 +9,11 @@ import (
 )
 
 type Querier interface {
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	DeleteExpiredSessions(ctx context.Context, lastActivity int64) error
+	DeleteSessionByUserId(ctx context.Context, userID int64) error
+	GetSessionByToken(ctx context.Context, id string) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int32) (GetUserByIdRow, error)
 	ListUserPermissions(ctx context.Context, id int32) ([]string, error)

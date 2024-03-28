@@ -107,6 +107,17 @@ type RoleUser struct {
 	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
+type Session struct {
+	ID           string         `json:"id"`
+	IpAddress    sql.NullString `json:"ip_address"`
+	UserAgent    sql.NullString `json:"user_agent"`
+	Payload      string         `json:"payload"`
+	LastActivity int64          `json:"last_activity"`
+	UserID       int64          `json:"user_id"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    sql.NullTime   `json:"updated_at"`
+}
+
 type Template struct {
 	ID         int32        `json:"id"`
 	Name       string       `json:"name"`

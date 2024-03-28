@@ -34,7 +34,7 @@ type CreateUserRow struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Name, arg.Email, arg.Password)
+	row := q.queryRow(ctx, q.createUserStmt, createUser, arg.Name, arg.Email, arg.Password)
 	var i CreateUserRow
 	err := row.Scan(
 		&i.ID,
@@ -67,7 +67,7 @@ type GetUserByEmailRow struct {
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	row := q.queryRow(ctx, q.getUserByEmailStmt, getUserByEmail, email)
 	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
@@ -100,7 +100,7 @@ type GetUserByIdRow struct {
 }
 
 func (q *Queries) GetUserById(ctx context.Context, id int32) (GetUserByIdRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserById, id)
+	row := q.queryRow(ctx, q.getUserByIdStmt, getUserById, id)
 	var i GetUserByIdRow
 	err := row.Scan(
 		&i.ID,
@@ -124,7 +124,7 @@ WHERE u.id = $1
 `
 
 func (q *Queries) ListUserPermissions(ctx context.Context, id int32) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, listUserPermissions, id)
+	rows, err := q.query(ctx, q.listUserPermissionsStmt, listUserPermissions, id)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ type ListUsersRow struct {
 }
 
 func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error) {
-	rows, err := q.db.QueryContext(ctx, listUsers, arg.Search, arg.Offset, arg.Limit)
+	rows, err := q.query(ctx, q.listUsersStmt, listUsers, arg.Search, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ package sqlc
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type DBTX interface {
@@ -20,12 +21,148 @@ func New(db DBTX) *Queries {
 	return &Queries{db: db}
 }
 
+func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
+	q := Queries{db: db}
+	var err error
+	if q.createSessionStmt, err = db.PrepareContext(ctx, createSession); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateSession: %w", err)
+	}
+	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
+	}
+	if q.deleteExpiredSessionsStmt, err = db.PrepareContext(ctx, deleteExpiredSessions); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteExpiredSessions: %w", err)
+	}
+	if q.deleteSessionByUserIdStmt, err = db.PrepareContext(ctx, deleteSessionByUserId); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSessionByUserId: %w", err)
+	}
+	if q.getSessionByTokenStmt, err = db.PrepareContext(ctx, getSessionByToken); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSessionByToken: %w", err)
+	}
+	if q.getUserByEmailStmt, err = db.PrepareContext(ctx, getUserByEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserByEmail: %w", err)
+	}
+	if q.getUserByIdStmt, err = db.PrepareContext(ctx, getUserById); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserById: %w", err)
+	}
+	if q.listUserPermissionsStmt, err = db.PrepareContext(ctx, listUserPermissions); err != nil {
+		return nil, fmt.Errorf("error preparing query ListUserPermissions: %w", err)
+	}
+	if q.listUsersStmt, err = db.PrepareContext(ctx, listUsers); err != nil {
+		return nil, fmt.Errorf("error preparing query ListUsers: %w", err)
+	}
+	return &q, nil
+}
+
+func (q *Queries) Close() error {
+	var err error
+	if q.createSessionStmt != nil {
+		if cerr := q.createSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createSessionStmt: %w", cerr)
+		}
+	}
+	if q.createUserStmt != nil {
+		if cerr := q.createUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
+		}
+	}
+	if q.deleteExpiredSessionsStmt != nil {
+		if cerr := q.deleteExpiredSessionsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteExpiredSessionsStmt: %w", cerr)
+		}
+	}
+	if q.deleteSessionByUserIdStmt != nil {
+		if cerr := q.deleteSessionByUserIdStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSessionByUserIdStmt: %w", cerr)
+		}
+	}
+	if q.getSessionByTokenStmt != nil {
+		if cerr := q.getSessionByTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSessionByTokenStmt: %w", cerr)
+		}
+	}
+	if q.getUserByEmailStmt != nil {
+		if cerr := q.getUserByEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserByEmailStmt: %w", cerr)
+		}
+	}
+	if q.getUserByIdStmt != nil {
+		if cerr := q.getUserByIdStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserByIdStmt: %w", cerr)
+		}
+	}
+	if q.listUserPermissionsStmt != nil {
+		if cerr := q.listUserPermissionsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listUserPermissionsStmt: %w", cerr)
+		}
+	}
+	if q.listUsersStmt != nil {
+		if cerr := q.listUsersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listUsersStmt: %w", cerr)
+		}
+	}
+	return err
+}
+
+func (q *Queries) exec(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (sql.Result, error) {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).ExecContext(ctx, args...)
+	case stmt != nil:
+		return stmt.ExecContext(ctx, args...)
+	default:
+		return q.db.ExecContext(ctx, query, args...)
+	}
+}
+
+func (q *Queries) query(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (*sql.Rows, error) {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).QueryContext(ctx, args...)
+	case stmt != nil:
+		return stmt.QueryContext(ctx, args...)
+	default:
+		return q.db.QueryContext(ctx, query, args...)
+	}
+}
+
+func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) *sql.Row {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).QueryRowContext(ctx, args...)
+	case stmt != nil:
+		return stmt.QueryRowContext(ctx, args...)
+	default:
+		return q.db.QueryRowContext(ctx, query, args...)
+	}
+}
+
 type Queries struct {
-	db DBTX
+	db                        DBTX
+	tx                        *sql.Tx
+	createSessionStmt         *sql.Stmt
+	createUserStmt            *sql.Stmt
+	deleteExpiredSessionsStmt *sql.Stmt
+	deleteSessionByUserIdStmt *sql.Stmt
+	getSessionByTokenStmt     *sql.Stmt
+	getUserByEmailStmt        *sql.Stmt
+	getUserByIdStmt           *sql.Stmt
+	listUserPermissionsStmt   *sql.Stmt
+	listUsersStmt             *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db: tx,
+		db:                        tx,
+		tx:                        tx,
+		createSessionStmt:         q.createSessionStmt,
+		createUserStmt:            q.createUserStmt,
+		deleteExpiredSessionsStmt: q.deleteExpiredSessionsStmt,
+		deleteSessionByUserIdStmt: q.deleteSessionByUserIdStmt,
+		getSessionByTokenStmt:     q.getSessionByTokenStmt,
+		getUserByEmailStmt:        q.getUserByEmailStmt,
+		getUserByIdStmt:           q.getUserByIdStmt,
+		listUserPermissionsStmt:   q.listUserPermissionsStmt,
+		listUsersStmt:             q.listUsersStmt,
 	}
 }

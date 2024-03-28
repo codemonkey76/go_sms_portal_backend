@@ -8,19 +8,19 @@ import (
 
 func Info(v ...any) {
 	c := NewColor("white", "blue", "bold")
-	message := fmt.Sprintln(v...)
+	message := fmt.Sprint(v...)
 	fmt.Printf(c.Apply(" Info  ") + " " + message + "\n")
 }
 
-func Warn(format string, v ...any) {
+func Warn(v ...any) {
 	c := NewColor("black", "yellow", "bold")
-	message := fmt.Sprintln(v...)
+	message := fmt.Sprint(v...)
 	fmt.Printf(c.Apply(" Warn  ") + " " + message + "\n")
 }
 
-func Error(format string, v ...any) {
+func Error(v ...any) {
 	c := NewColor("white", "red", "bold")
-	message := fmt.Sprintln(v...)
+	message := fmt.Sprint(v...)
 	fmt.Printf(c.Apply(" Error ") + " " + message + "\n")
 }
 
