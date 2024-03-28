@@ -3,6 +3,7 @@ package rpc_users
 import (
 	"database/sql"
 	"errors"
+	"math"
 	"net/http"
 	"sms_portal/db/sqlc"
 	"sms_portal/internal/auth"
@@ -31,14 +32,23 @@ func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepend
 		return nil, err
 	}
 
-	paginator := pagination.NewPaginator(
+	totalCount := 0
+	from := 0
+	to := 0
+	if len(users) > 0 {
+		totalCount = int(users[0].TotalCount)
+		from = ((page - 1) * perPage) + 1
+		to = len(users) + ((page - 1) * perPage)
+	}
+
+	paginator := pagination.NewPaginatedResults(
 		pagination.WithData(users),
 		pagination.WithPerPage(perPage),
 		pagination.WithPage(page),
-		pagination.WithFrom((page-1)*perPage+1),
-		pagination.WithTo(len(users)+(page-1)*perPage),
-		pagination.WithTotal(int(users[0].TotalCount)),
-		pagination.WithLastPage(int(users[0].TotalCount)/perPage),
+		pagination.WithFrom(from),
+		pagination.WithTo(to),
+		pagination.WithTotal(totalCount),
+		pagination.WithLastPage(int(math.Ceil(float64(totalCount)/float64(perPage)))),
 	)
 
 	return paginator, nil

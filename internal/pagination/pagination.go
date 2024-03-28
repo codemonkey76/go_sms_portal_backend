@@ -8,29 +8,24 @@ import (
 )
 
 type Paginator struct {
-	CurrentPage  int              `json:"current_page"`
-	Data         interface{}      `json:"data"`
-	FirstPageUrl string           `json:"first_page_url"`
-	From         int              `json:"from"`
-	LastPage     int              `json:"last_page"`
-	LastPageUrl  string           `json:"last_page_url"`
-	Links        []PaginationLink `json:"links"`
-	NextPageUrl  string           `json:"next_page_url"`
-	Path         string           `json:"path"`
-	PerPage      int              `json:"per_page"`
-	PrevPageUrl  string           `json:"prev_page_url"`
-	To           int              `json:"to"`
-	Total        int              `json:"total"`
+	CurrentPage int              `json:"current_page"`
+	From        int              `json:"from"`
+	LastPage    int              `json:"last_page"`
+	Links       []PaginationLink `json:"links"`
+	Path        string           `json:"path"`
+	PerPage     int              `json:"per_page"`
+	To          int              `json:"to"`
+	Total       int              `json:"total"`
 }
 
-type PaginationLink struct {
-	Url    string `json:"url"`
-	Label  string `json:"label"`
-	Active bool   `json:"active"`
+type PaginatedResults struct {
+	Data  interface{}     `json:"data"`
+	Links PaginationLinks `json:"links"`
+	Meta  Paginator       `json:"meta"`
 }
 
-func NewPaginator(options ...PaginatorOption) *Paginator {
-	p := &Paginator{}
+func NewPaginatedResults(options ...PaginatedResultsOption) *PaginatedResults {
+	p := &PaginatedResults{}
 
 	for _, option := range options {
 		option(p)
@@ -39,48 +34,61 @@ func NewPaginator(options ...PaginatorOption) *Paginator {
 	return p
 }
 
-type PaginatorOption func(*Paginator)
+type PaginationLinks struct {
+	First *string `json:"first"`
+	Last  *string `json:"last"`
+	Prev  *string `json:"prev"`
+	Next  *string `json:"next"`
+}
 
-func WithData(data interface{}) PaginatorOption {
-	return func(p *Paginator) {
+type PaginationLink struct {
+	Url    *string `json:"url"`
+	Label  *string `json:"label"`
+	Active bool    `json:"active"`
+}
+
+type PaginatedResultsOption func(*PaginatedResults)
+
+func WithData(data interface{}) PaginatedResultsOption {
+	return func(p *PaginatedResults) {
 		p.Data = data
 	}
 }
 
-func WithPerPage(perPage int) PaginatorOption {
-	return func(p *Paginator) {
-		p.PerPage = perPage
+func WithPerPage(perPage int) PaginatedResultsOption {
+	return func(p *PaginatedResults) {
+		p.Meta.PerPage = perPage
 	}
 }
 
-func WithPage(page int) PaginatorOption {
-	return func(p *Paginator) {
-		p.CurrentPage = page
+func WithPage(page int) PaginatedResultsOption {
+	return func(p *PaginatedResults) {
+		p.Meta.CurrentPage = page
 	}
 }
 
-func WithFrom(from int) PaginatorOption {
+func WithFrom(from int) PaginatedResultsOption {
 	fmt.Printf("Setting From to: %d\n", from)
-	return func(p *Paginator) {
-		p.From = from
+	return func(p *PaginatedResults) {
+		p.Meta.From = from
 	}
 }
 
-func WithTo(to int) PaginatorOption {
-	return func(p *Paginator) {
-		p.To = to
+func WithTo(to int) PaginatedResultsOption {
+	return func(p *PaginatedResults) {
+		p.Meta.To = to
 	}
 }
 
-func WithTotal(total int) PaginatorOption {
-	return func(p *Paginator) {
-		p.Total = total
+func WithTotal(total int) PaginatedResultsOption {
+	return func(p *PaginatedResults) {
+		p.Meta.Total = total
 	}
 }
 
-func WithLastPage(lastPage int) PaginatorOption {
-	return func(p *Paginator) {
-		p.LastPage = lastPage
+func WithLastPage(lastPage int) PaginatedResultsOption {
+	return func(p *PaginatedResults) {
+		p.Meta.LastPage = lastPage
 	}
 }
 
