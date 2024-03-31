@@ -49,6 +49,37 @@ type PaginationLink struct {
 
 type PaginatedResultsOption func(*PaginatedResults)
 
+func WithPath(path string) PaginatedResultsOption {
+	return func(p *PaginatedResults) {
+		p.Meta.Path = path
+	}
+}
+
+func SetupLinks(linksEachSide int) PaginatedResultsOption {
+	return func(p *PaginatedResults) {
+		first := p.Meta.Path + "?page=1"
+		last := p.Meta.Path + "?page=" + strconv.Itoa(p.Meta.LastPage)
+		p.Links.First = &first
+		p.Links.Last = &last
+
+		if p.Meta.LastPage > p.Meta.CurrentPage {
+			// Setup next link
+			next := p.Meta.Path + "?page=" + strconv.Itoa(p.Meta.CurrentPage+1)
+			p.Links.Next = &next
+		}
+
+		if p.Meta.CurrentPage > 1 {
+			// Setup prev link
+			prev := p.Meta.Path + "?page=" + strconv.Itoa(p.Meta.CurrentPage-1)
+			p.Links.Prev = &prev
+		}
+
+		// Setup meta Links
+		if linksEachSide > 0 {
+			// do Something here
+		}
+	}
+}
 func WithData(data interface{}) PaginatedResultsOption {
 	return func(p *PaginatedResults) {
 		p.Data = data

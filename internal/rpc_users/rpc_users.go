@@ -35,11 +35,18 @@ func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepend
 	totalCount := 0
 	from := 0
 	to := 0
+	last := 0
 	if len(users) > 0 {
 		totalCount = int(users[0].TotalCount)
 		from = ((page - 1) * perPage) + 1
 		to = len(users) + ((page - 1) * perPage)
+		last = int(math.Ceil(float64(totalCount) / float64(perPage)))
 	}
+	path := "http"
+	if r.TLS != nil {
+		path += "s"
+	}
+	path += "://" + r.Host + r.URL.Path
 
 	paginator := pagination.NewPaginatedResults(
 		pagination.WithData(users),
@@ -48,7 +55,9 @@ func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepend
 		pagination.WithFrom(from),
 		pagination.WithTo(to),
 		pagination.WithTotal(totalCount),
-		pagination.WithLastPage(int(math.Ceil(float64(totalCount)/float64(perPage)))),
+		pagination.WithLastPage(last),
+		pagination.WithPath(path),
+		pagination.SetupLinks(),
 	)
 
 	return paginator, nil
