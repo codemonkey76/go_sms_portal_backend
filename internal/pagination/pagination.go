@@ -47,6 +47,14 @@ type PaginationLink struct {
 	Active bool    `json:"active"`
 }
 
+func NewPaginationLink(url, label *string, active bool) PaginationLink {
+	return PaginationLink{
+		Url:    url,
+		Label:  label,
+		Active: active,
+	}
+}
+
 type PaginatedResultsOption func(*PaginatedResults)
 
 func WithPath(path string) PaginatedResultsOption {
@@ -74,12 +82,100 @@ func SetupLinks(linksEachSide int) PaginatedResultsOption {
 			p.Links.Prev = &prev
 		}
 
-		// Setup meta Links
-		if linksEachSide > 0 {
-			// do Something here
-		}
+		numLeader := 2
+		p.Meta.Links = getPageLinks(p.Meta.Path, p.Meta.CurrentPage, p.Meta.LastPage, linksEachSide, numLeader)
 	}
 }
+
+func getPageLinks(path string, currentPage, totalPages, eachSide, numLeader int) []PaginationLink {
+	links := make([]PaginationLink, 0)
+
+	// Previous
+	{
+		label := "&laquo; Previous"
+		var url *string = nil
+		active := false
+
+		l := NewPaginationLink(url, &label, active)
+		links = append(links, l)
+	}
+
+	// Add all pages
+	hasNotManyPages := totalPages <= (3 + (eachSide * 2) + (numLeader * 2))
+	isNearStart := currentPage <= (3 + eachSide + numLeader)
+	//_isNearEnd := currentPage >= (totalPages - (2 + (eachSide * 2)))
+
+	if hasNotManyPages {
+		fmt.Printf("Not many pages\n")
+		for i := 1; i <= totalPages; i++ {
+			url := fmt.Sprintf("%s?page=%d", path, i)
+			active := i == currentPage
+			label := fmt.Sprintf("%d", i)
+			l := NewPaginationLink(&url, &label, active)
+			links = append(links, l)
+		}
+	} else {
+		fmt.Printf("Has a lot of pages\n")
+		if isNearStart {
+			fmt.Printf("Is near start\n")
+			for i := 1; i <= currentPage+eachSide; i++ {
+				fmt.Printf("Adding link for page %d\n", i)
+				url := fmt.Sprintf("%s?page=%d", path, i)
+				active := i == currentPage
+				label := fmt.Sprintf("%d", i)
+				l := NewPaginationLink(&url, &label, active)
+				links = append(links, l)
+			}
+			// Add ...
+			{
+				var url *string = nil
+				active := false
+				label := "..."
+				l := NewPaginationLink(url, &label, active)
+				links = append(links, l)
+			}
+
+			// Add the last 2 pages
+			for i := totalPages - 1; i <= totalPages; i++ {
+				url := fmt.Sprintf("%s?page=%d", path, i)
+				active := i == currentPage
+				label := fmt.Sprintf("%d", i)
+				l := NewPaginationLink(&url, &label, active)
+				links = append(links, l)
+			}
+		} else {
+			fmt.Printf("Is not near start\n")
+			for i := 1; i <= 2; i++ {
+				url := fmt.Sprintf("%s?page=%d", path, i)
+				active := false
+				label := fmt.Sprintf("%d", i)
+				l := NewPaginationLink(&url, &label, active)
+				links = append(links, l)
+			}
+
+			for i := currentPage - eachSide; i <= currentPage+eachSide; i++ {
+				url := fmt.Sprintf("%s?page=%d", path, i)
+				active := i == currentPage
+				label := fmt.Sprintf("%d", i)
+				l := NewPaginationLink(&url, &label, active)
+				links = append(links, l)
+			}
+		}
+
+	}
+
+	// Next
+	{
+		label := "Next &raquo;"
+		var url *string = nil
+		active := false
+
+		l := NewPaginationLink(url, &label, active)
+		links = append(links, l)
+	}
+	return links
+}
+
 func WithData(data interface{}) PaginatedResultsOption {
 	return func(p *PaginatedResults) {
 		p.Data = data

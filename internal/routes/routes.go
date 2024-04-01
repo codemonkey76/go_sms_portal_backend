@@ -15,10 +15,11 @@ func RegisterRoutes(mux *http.ServeMux) *utils.RouteRegistrar {
 	queries := sqlc.New(db)
 
 	rr := utils.NewRouteRegistrar(mux, utils.WithDB(db, queries))
+	baseStack := middleware.CreateStack(middleware.CorsHandler, middleware.LogRequestHandler)
 	authStack := middleware.CreateStack(middleware.AuthHandler, middleware.LogRequestHandler)
 	prefix := "/api/v1"
 
-	rr.AddHandler("POST", prefix, "/auth/login", rpc_auth.AuthLogin, nil)
+	rr.AddHandler("POST", prefix, "/auth/login", rpc_auth.AuthLogin, baseStack)
 	rr.AddHandler("POST", prefix, "/auth/logout", rpc_auth.AuthLogout, authStack)
 	rr.AddHandler("GET", prefix, "/users/", rpc_users.UsersIndex, authStack)
 	rr.AddHandler("GET", prefix, "/users/{id}", rpc_users.UsersGet, authStack)

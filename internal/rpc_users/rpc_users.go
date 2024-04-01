@@ -35,7 +35,7 @@ func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepend
 	totalCount := 0
 	from := 0
 	to := 0
-	last := 0
+	last := 1
 	if len(users) > 0 {
 		totalCount = int(users[0].TotalCount)
 		from = ((page - 1) * perPage) + 1
@@ -57,7 +57,7 @@ func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepend
 		pagination.WithTotal(totalCount),
 		pagination.WithLastPage(last),
 		pagination.WithPath(path),
-		pagination.SetupLinks(),
+		pagination.SetupLinks(2),
 	)
 
 	return paginator, nil
