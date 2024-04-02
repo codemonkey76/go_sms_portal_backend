@@ -59,6 +59,8 @@ func setupJobScheduler() (gocron.Scheduler, error) {
 }
 
 func ServeCommand() {
+	env.Init()
+
 	s, err := setupJobScheduler()
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting up job scheduler: %s", err.Error()))
@@ -67,7 +69,7 @@ func ServeCommand() {
 
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
-	port := env.Env(".env").Get("SERVER_PORT", "8080")
+	port := env.AppConfig.ServerPort
 	server := http.Server{
 		Addr:    ":" + port,
 		Handler: middleware.LogRequestHandler(mux),
@@ -80,6 +82,7 @@ func ServeCommand() {
 }
 
 func SeedCommand() {
+	env.Init()
 	seedCmd := flag.NewFlagSet("seed", flag.ExitOnError)
 	var entities string
 	seedCmd.StringVar(&entities, "entities", "", "Comma-separated list of entities to seed: all,users,tasks,customers,permissions,roles")

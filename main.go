@@ -5,9 +5,11 @@ import (
 	"os"
 	"sms_portal/internal/commands"
 	"sms_portal/internal/database"
+	"sms_portal/internal/env"
 )
 
 func main() {
+	env.Init()
 	// Check the Database conenction, so we can fail early
 	db := database.GetDB()
 	defer db.Close()

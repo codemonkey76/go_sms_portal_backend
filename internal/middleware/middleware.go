@@ -8,6 +8,7 @@ import (
 	"sms_portal/db/sqlc"
 	"sms_portal/internal/config"
 	"sms_portal/internal/database"
+	"sms_portal/internal/env"
 	"sms_portal/internal/ui"
 	"time"
 )
@@ -26,8 +27,10 @@ func CreateStack(xs ...Middleware) Middleware {
 
 func CorsHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow CORS
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		ui.Info("CORS Middleware enabled")
+
+		w.Header().Set("Access-Control-Allow-Origin", env.AppConfig.FrontendDomain)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
@@ -42,6 +45,8 @@ func CorsHandler(next http.Handler) http.Handler {
 
 func LogRequestHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ui.Info("LogRequest Middleware enabled")
+
 		start := time.Now()
 
 		wrapped := &wrappedWriter{ResponseWriter: w, statusCode: http.StatusOK}
@@ -58,9 +63,9 @@ func LogRequestHandler(next http.Handler) http.Handler {
 }
 
 func AuthHandler(next http.Handler) http.Handler {
-	// AuthHandler is a middleware that checks if the request has a valid token
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Validate Token
+		ui.Info("Auth Middleware enabled")
+
 		user_id, err := validateSessionToken(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)

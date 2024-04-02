@@ -3,10 +3,37 @@ package env
 import (
 	"fmt"
 	"os"
+	"sms_portal/internal/ui"
 	"strings"
 
 	"github.com/joho/godotenv"
 )
+
+var AppConfig struct {
+	FrontendDomain string
+	DatabaseName   string
+	DatabaseUser   string
+	DatabasePass   string
+	DatabaseHost   string
+	DatabasePort   string
+	ServerPort     string
+}
+
+func Init() {
+	fmt.Println("Initializing environment variables")
+	if err := godotenv.Load(); err != nil {
+		ui.Error("No .env file found")
+	}
+
+	AppConfig.FrontendDomain = getVarOrDefault("FRONTEND_DOMAIN", "http://localhost:5173")
+	AppConfig.DatabaseName = getVarOrDefault("DB_NAME", "postgres")
+	AppConfig.DatabaseUser = getVarOrDefault("DB_USER", "postgres")
+	AppConfig.DatabasePass = getVarOrDefault("DB_PASS", "postgres")
+	AppConfig.DatabaseHost = getVarOrDefault("DB_HOST", "localhost")
+	AppConfig.DatabasePort = getVarOrDefault("DB_PORT", "5432")
+	AppConfig.ServerPort = getVarOrDefault("SERVER_PORT", "8080")
+
+}
 
 func getVarOrDefault(key string, defaultValue string) string {
 	value := os.Getenv(key)
@@ -17,14 +44,8 @@ func getVarOrDefault(key string, defaultValue string) string {
 }
 
 func GetConnectionString() string {
-	godotenv.Load()
-	db_name := getVarOrDefault("DB_NAME", "postgres")
-	db_user := getVarOrDefault("DB_USER", "postgres")
-	db_pass := getVarOrDefault("DB_PASS", "postgres")
-	db_host := getVarOrDefault("DB_HOST", "localhost")
-	db_port := getVarOrDefault("DB_PORT", "5432")
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", db_user, db_pass, db_host, db_port, db_name)
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", AppConfig.DatabaseUser, AppConfig.DatabasePass, AppConfig.DatabaseHost, AppConfig.DatabasePort, AppConfig.DatabaseName)
 	return connStr
 }
 

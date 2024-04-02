@@ -85,14 +85,14 @@ func NewRouteRegistrar(mux *http.ServeMux, opts ...RouteRegistrarOption) *RouteR
 }
 
 func (rr *RouteRegistrar) AddHandler(method, prefix, route string, handlerFunc HandlerFunc, middleware middleware.Middleware) {
-	fullPath := method + " " + prefix + route
+	//fullPath := method + " " + prefix + route
 	handler := HandleRequest(rr.Deps, handlerFunc)
 
 	if middleware != nil {
 		middlewareHandler := middleware(http.HandlerFunc(handler))
-		rr.Mux.Handle(fullPath, middlewareHandler)
+		rr.Mux.Handle(prefix+route, middlewareHandler)
 	} else {
-		rr.Mux.Handle(fullPath, http.HandlerFunc(handler))
+		rr.Mux.Handle(prefix+route, http.HandlerFunc(handler))
 	}
 	newRoute := Route{
 		Method:      method,
