@@ -3,6 +3,7 @@ package rpc_auth
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sms_portal/db/sqlc"
 	"sms_portal/internal/config"
@@ -14,6 +15,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func CheckSession(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
+	w.WriteHeader(http.StatusOK)
+	response := CheckSessionResponse{LoggedIn: true}
+
+	return response, nil
+}
 func AuthLogin(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
 	var creds credentials
 
@@ -23,6 +30,7 @@ func AuthLogin(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepende
 		return nil, errors.InvalidCredentials()
 	}
 
+	ui.Info(fmt.Sprintf("Received Creds: %s", creds))
 	user, err := deps.Queries.GetUserByEmail(r.Context(), creds.Email)
 	if err == nil {
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
@@ -80,6 +88,10 @@ func AuthLogin(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepende
 	}
 
 	return response, nil
+}
+
+type CheckSessionResponse struct {
+	LoggedIn bool `json:"loggedIn"`
 }
 
 type LoginResponse struct {
