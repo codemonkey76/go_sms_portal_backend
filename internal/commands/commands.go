@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"os/signal"
 	"sms_portal/db/sqlc"
 	"sms_portal/internal/config"
 	"sms_portal/internal/database"
@@ -16,8 +17,11 @@ import (
 	"sms_portal/internal/seed"
 	"sms_portal/internal/ui"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-co-op/gocron/v2"
 )
 
@@ -40,7 +44,7 @@ func setupJobScheduler() (gocron.Scheduler, error) {
 		return nil, err
 	}
 
-	j, err := s.NewJob(
+	_, err = s.NewJob(
 		gocron.DurationJob(24*time.Hour),
 		gocron.NewTask(func() {
 			db := database.GetDB()
@@ -52,33 +56,116 @@ func setupJobScheduler() (gocron.Scheduler, error) {
 		return nil, err
 	}
 
-	ui.Info("Scheduled Job: ", "ClearExpiredSessions", j.ID())
+	ui.Info("Scheduled Job: ", "ClearExpiredSessions")
 	s.Start()
 
 	return s, nil
 }
 
 func ServeCommand() {
-	env.Init()
+	var mu sync.Mutex
+	currentPort := env.AppConfig.ServerPort
+	ui.Info("Setting currentPort to: ", currentPort)
+	serverDone := make(chan bool)
+	ui.Info("Launching Serve go routine.")
+	go Serve(currentPort, serverDone)
+	ui.Info("Server should now be up and running.")
 
+	ui.Info("Setting up file watcher.")
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		ui.Error("Error creating watcher: ", err.Error())
+	}
+	defer watcher.Close()
+
+	debounceTimer := time.NewTimer(1 * time.Second)
+	debounceTimer.Stop()
+
+	go func() {
+		for {
+			ui.Info("Checking for watcher events.")
+			select {
+			case event, ok := <-watcher.Events:
+				ui.Info("Received event: ", event)
+				if !ok {
+					return
+				}
+				if event.Op&(fsnotify.Write|fsnotify.Rename) != 0 {
+					debounceTimer.Reset(500 * time.Millisecond)
+				}
+			case <-debounceTimer.C:
+				mu.Lock()
+				defer mu.Unlock()
+				env.Init()
+
+				if env.AppConfig.ServerPort != currentPort {
+					ui.Info(".env file modified, SERVER_PORT Changed. Restarting server.")
+					currentPort = env.AppConfig.ServerPort
+
+					ui.Info("Sending done signal.")
+					serverDone <- true
+					<-serverDone
+					serverDone = make(chan bool)
+					go Serve(currentPort, serverDone)
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				ui.Error("Error watching file: ", err.Error())
+			}
+		}
+	}()
+
+	err = watcher.Add(".env")
+	if err != nil {
+		ui.Error("Error watching file: ", err.Error())
+	}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	ui.Info("Received quit signal. Sending done signal.")
+	serverDone <- true
+
+}
+
+func Serve(port string, done chan bool) {
+	ui.Info("Setting up job scheduler.")
 	s, err := setupJobScheduler()
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting up job scheduler: %s", err.Error()))
 		defer s.Shutdown()
 	}
 
+	ui.Info("Registering Application routes.")
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
-	port := env.AppConfig.ServerPort
 	server := http.Server{
 		Addr:    ":" + port,
 		Handler: middleware.LogRequestHandler(mux),
 	}
 
 	ui.Info("Server started on port " + port)
-	err = server.ListenAndServe()
+	go func() {
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			ui.Error("Fatal error occurred running server: ", err.Error())
+		}
+	}()
+	ui.Info("Go routine started. waiting on done channel.")
+	<-done
+	ui.Info("Received done signal. Shutting down server.")
 
-	ui.Error("Fatal error occurred running server: ", err.Error())
+	// Create a context with countdown
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		ui.Error("Error shutting down server: ", err.Error())
+	} else {
+		ui.Info("Server stopped.")
+	}
+	done <- true
 }
 
 func SeedCommand() {

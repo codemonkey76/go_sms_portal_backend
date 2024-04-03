@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"sms_portal/internal/env"
 	"sync"
 
@@ -27,7 +26,6 @@ func InitDB() {
 }
 
 func GetDB() *sql.DB {
-	fmt.Println("Getting DB")
 	dbOnce.Do(InitDB)
 	return db
 }
@@ -39,7 +37,5 @@ func CloseDB() {
 }
 
 func ConnectDB() (*sql.DB, error) {
-	connstr := env.GetConnectionString()
-	fmt.Println("Connecting to DB: ", connstr)
 	return sql.Open("postgres", env.GetConnectionString())
 }

@@ -1,6 +1,7 @@
 package env
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"sms_portal/internal/ui"
@@ -19,9 +20,28 @@ var AppConfig struct {
 	ServerPort     string
 }
 
+// Function to read and log the content of .env file
+func logEnvFileContent(filePath string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	fmt.Println("Logging .env file content:")
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text()) // Prints each line of the .env file
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
 func Init() {
-	fmt.Println("Initializing environment variables")
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Overload(); err != nil {
 		ui.Error("No .env file found")
 	}
 
