@@ -2,3 +2,4 @@
 .env.test
 sms_portal
 bin/
+tmp/
