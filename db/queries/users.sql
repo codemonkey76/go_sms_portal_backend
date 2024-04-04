@@ -47,3 +47,7 @@ INSERT INTO permission_user (permission_id, user_id) VALUES ($1, $2) RETURNING *
 
 -- name: AttachRoleToUser :one
 INSERT INTO role_user (role_id, user_id) VALUES ($1, $2) RETURNING *;
+
+
+-- name: UpdateUserAvatar :one
+UPDATE users SET avatar_url = $2 WHERE id = $1 RETURNING *;

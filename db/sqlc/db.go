@@ -69,6 +69,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listUsersStmt, err = db.PrepareContext(ctx, listUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query ListUsers: %w", err)
 	}
+	if q.updateUserAvatarStmt, err = db.PrepareContext(ctx, updateUserAvatar); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserAvatar: %w", err)
+	}
 	return &q, nil
 }
 
@@ -149,6 +152,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing listUsersStmt: %w", cerr)
 		}
 	}
+	if q.updateUserAvatarStmt != nil {
+		if cerr := q.updateUserAvatarStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserAvatarStmt: %w", cerr)
+		}
+	}
 	return err
 }
 
@@ -203,6 +211,7 @@ type Queries struct {
 	getUserByIdStmt            *sql.Stmt
 	listUserPermissionsStmt    *sql.Stmt
 	listUsersStmt              *sql.Stmt
+	updateUserAvatarStmt       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -224,5 +233,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getUserByIdStmt:            q.getUserByIdStmt,
 		listUserPermissionsStmt:    q.listUserPermissionsStmt,
 		listUsersStmt:              q.listUsersStmt,
+		updateUserAvatarStmt:       q.updateUserAvatarStmt,
 	}
 }

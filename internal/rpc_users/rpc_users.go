@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"math"
+	"mime/multipart"
 	"net/http"
 	"sms_portal/db/sqlc"
 	"sms_portal/internal/auth"
@@ -11,6 +12,8 @@ import (
 	"sms_portal/internal/pagination"
 	"sms_portal/internal/utils"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func UsersIndex(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
@@ -79,4 +82,35 @@ func UsersGet(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependen
 		return nil, http_errors.InternalServerError()
 	}
 	return user, nil
+}
+
+type UserProfilePhotoForm struct {
+	UserId           int64
+	ProfilePicData   *multipart.File
+	ProfilePicHeader *multipart.FileHeader
+}
+
+func UserProfilePhotoStore(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
+	user_id := r.Context().Value("user_id").(int64)
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		return nil, http_errors.BadRequest()
+	}
+
+	file, _, err := r.FormFile("avatar")
+	if err != nil {
+		return nil, http_errors.BadRequest()
+	}
+	defer file.Close()
+
+	fname, err := uploadFileToS3(file)
+	if err != nil {
+		return nil, err
+	}
+	deps.Queries.UpdateUserAvatar(r.Context(), sqlc.UpdateUserAvatarParams{
+		ID:        user_id,
+		AvatarUrl: sql.NullString{},
+	})
+	return nil, nil
 }

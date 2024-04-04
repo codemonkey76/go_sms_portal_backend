@@ -24,6 +24,7 @@ type Querier interface {
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	ListUserPermissions(ctx context.Context, userID int64) ([]string, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error)
+	UpdateUserAvatar(ctx context.Context, arg UpdateUserAvatarParams) (User, error)
 }
 
 var _ Querier = (*Queries)(nil)

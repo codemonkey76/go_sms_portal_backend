@@ -128,12 +128,13 @@ type Template struct {
 }
 
 type User struct {
-	ID              int64        `json:"id"`
-	Name            string       `json:"name"`
-	Email           string       `json:"email"`
-	EmailVerifiedAt sql.NullTime `json:"email_verified_at"`
-	Password        string       `json:"password"`
-	Active          bool         `json:"active"`
-	CreatedAt       time.Time    `json:"created_at"`
-	UpdatedAt       sql.NullTime `json:"updated_at"`
+	ID              int64          `json:"id"`
+	Name            string         `json:"name"`
+	Email           string         `json:"email"`
+	EmailVerifiedAt sql.NullTime   `json:"email_verified_at"`
+	Password        string         `json:"password"`
+	Active          bool           `json:"active"`
+	AvatarUrl       sql.NullString `json:"avatar_url"`
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       sql.NullTime   `json:"updated_at"`
 }

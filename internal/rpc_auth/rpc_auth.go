@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sms_portal/db/sqlc"
 	"sms_portal/internal/config"
@@ -12,6 +13,7 @@ import (
 	"sms_portal/internal/utils"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,14 +23,31 @@ func CheckSession(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepe
 
 	return response, nil
 }
+
+type UserLoginForm struct {
+	Email    string `validate:"required,email"`
+	Password string `valdiate:"required"`
+}
+
+func validate(formData *interface{}, body io.ReadCloser) {
+	validate := validator.New()
+}
+
 func AuthLogin(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {
-	var creds credentials
+	validate := validator.New()
+	creds := UserLoginForm{
+		Email:    "",
+		Password: "",
+	}
 
 	err := json.NewDecoder(r.Body).Decode(&creds)
+
 	if err != nil {
 		ui.Info("Error decoding request body: " + err.Error())
 		return nil, errors.InvalidCredentials()
 	}
+
+	err = validate.Struct(creds)
 
 	ui.Info(fmt.Sprintf("Received Creds: %s", creds))
 	user, err := deps.Queries.GetUserByEmail(r.Context(), creds.Email)

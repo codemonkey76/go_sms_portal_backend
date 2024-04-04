@@ -257,3 +257,29 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 	}
 	return items, nil
 }
+
+const updateUserAvatar = `-- name: UpdateUserAvatar :one
+UPDATE users SET avatar_url = $2 WHERE id = $1 RETURNING id, name, email, email_verified_at, password, active, avatar_url, created_at, updated_at
+`
+
+type UpdateUserAvatarParams struct {
+	ID        int64          `json:"id"`
+	AvatarUrl sql.NullString `json:"avatar_url"`
+}
+
+func (q *Queries) UpdateUserAvatar(ctx context.Context, arg UpdateUserAvatarParams) (User, error) {
+	row := q.queryRow(ctx, q.updateUserAvatarStmt, updateUserAvatar, arg.ID, arg.AvatarUrl)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.EmailVerifiedAt,
+		&i.Password,
+		&i.Active,
+		&i.AvatarUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
