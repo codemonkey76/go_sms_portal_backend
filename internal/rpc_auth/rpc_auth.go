@@ -72,19 +72,29 @@ func AuthLogin(w http.ResponseWriter, r *http.Request, deps utils.HandlerDepende
 		HttpOnly: true,
 	})
 
-	return_user := sqlc.CreateUserRow{
+	return_user := sqlc.User{
 		ID:              user.ID,
 		Name:            user.Name,
 		Email:           user.Email,
-		Active:          user.Active,
 		EmailVerifiedAt: user.EmailVerifiedAt,
+		Password:        "",
+		Active:          false,
 		CreatedAt:       user.CreatedAt,
 		UpdatedAt:       user.UpdatedAt,
+	}
+
+	permissions, err := deps.Queries.ListUserPermissions(r.Context(), user.ID)
+
+	if err != nil {
+		permissions = []string{}
 	}
 	response := LoginResponse{
 		Success: true,
 		Message: "Login successful.",
-		Data:    return_user,
+		Data: UserData{
+			User:        return_user,
+			Permissions: permissions,
+		},
 	}
 
 	return response, nil
@@ -95,9 +105,14 @@ type CheckSessionResponse struct {
 }
 
 type LoginResponse struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Success bool     `json:"success"`
+	Message string   `json:"message"`
+	Data    UserData `json:"data"`
+}
+
+type UserData struct {
+	User        sqlc.User `json:"user"`
+	Permissions []string  `json:"permissions"`
 }
 
 func AuthLogout(w http.ResponseWriter, r *http.Request, deps utils.HandlerDependencies) (interface{}, error) {

@@ -68,7 +68,8 @@ func AuthHandler(next http.Handler) http.Handler {
 
 		user_id, err := validateSessionToken(r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintf(w, err.Error())
 			return
 		}
 
@@ -82,12 +83,16 @@ func AuthHandler(next http.Handler) http.Handler {
 
 type wrappedWriter struct {
 	http.ResponseWriter
-	statusCode int
+	statusCode    int
+	headerWritten bool
 }
 
 func (w *wrappedWriter) WriteHeader(statusCode int) {
-	w.ResponseWriter.WriteHeader(statusCode)
-	w.statusCode = statusCode
+	if !w.headerWritten {
+		w.ResponseWriter.WriteHeader(statusCode)
+		w.statusCode = statusCode
+		w.headerWritten = true
+	}
 }
 
 func validateSessionToken(r *http.Request) (int64, error) {
